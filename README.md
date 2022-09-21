@@ -58,12 +58,8 @@ Useful Options
 Benchmarks
 -------------------
 
-Many simple tests are located in the `test/` directory.  These are
-manually instrumented and can just be run.
-
-You may also want to try the larger benchmarks (distributed
-separately).  These require LLVM to instrument.
-
+The benchmarks are distributed separately.  These require LLVM to instrument.
+You may also follow the steps in the Artifact Appendix of our paper (https://dl.acm.org/doi/abs/10.1145/3445814.3446711) to run the benchmarks.
 
 Running your own code
 ---------------------
