@@ -1,5 +1,24 @@
-C11Tester: A Testing tool for C11 and C++11 Atomics
-=====================================================
+# DRD-c11
+
+Dynamic race detector based on c11tester.
+
+## How to run
+
+Follow the artifact to set up vagrant and ssh into it.
+```bash
+cd /home/vagrant
+mv c11tester c11tester.old
+git clone https://github.com/Eric-Song-Nop/DRD-c11.git c11tester
+cd c11tester/test
+bash test.sh
+```
+
+## How To Edit
+
+Find and edit file `drdtestor.cc` and `drdtestor.h`. Adding new file into this project in not recommended. If you really want to, please edit the `Makefile`, at least add `{filename}.o` into `Makefile` like what I did for `rdtestor.o`.
+
+<!-- C11Tester: A Testing tool for C11 and C++11 Atomics
+===================================================== -->
 
 C11Tester is a testing tool for C11/C++11 which randomly explores the
 behaviors of code under the C/C++ memory model.

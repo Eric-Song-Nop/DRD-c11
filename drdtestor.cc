@@ -17,6 +17,12 @@
 #include "bugmessage.h"
 #include "fuzzer.h"
 #include "drdtestor.h"
+
+DRDAction::DRDAction(const ModelAction* action): seq_number(action->get_seq_number()), t_id(action->get_tid()), a_type(action->get_type()), order(action->get_mo()), loc(reinterpret_cast<uint64_t>(action->get_location()))
+{
+
+}
+
 DRD_Testor::DRD_Testor()
 {
 }
@@ -31,12 +37,11 @@ DRD_Testor::DRD_Testor(actionlist *list) : clock_per_thread{}, ts{}, vs{}, ls{}
     for (it = list->begin(); it != NULL; it = it->getNext())
     {
         const ModelAction *act = it->getVal();
-        this->action_trace.emplace_back(
-            new ModelAction(act->get_type(), act->get_mo(), act->get_location(), act->get_value()));
+        this->action_trace.emplace_back(DRDAction(act));
         auto seq_num = static_cast<int>(act->get_seq_number());
         if (seq_num > cur_seq)
         {
-            this->action_trace.back()->set_seq_number(act->get_seq_number());
+            this->action_trace.back().seq_number = act->get_seq_number();
             cur_seq = seq_num;
         }
         else
@@ -50,6 +55,7 @@ DRD_Testor::DRD_Testor(actionlist *list) : clock_per_thread{}, ts{}, vs{}, ls{}
 /// @brief Main entry of fast track algorithm
 void DRD_Testor::test_data_race()
 {
+    std::cerr << "clock per -1: " << std::endl;
     int time = 0; // The global time
     for (int i = 0; i < MAIN_THREAD_ID; i++)
     {
@@ -58,19 +64,27 @@ void DRD_Testor::test_data_race()
     int creator_id = MAIN_THREAD_ID - 1;
     for (const auto &act : action_trace)
     {
-        time = act->get_seq_number();
-        auto a_type = act->get_type();
+        time = act.seq_number;
+        auto a_type = act.a_type;
+        std::cerr << "seq: " << act.seq_number << " clock per size: " << clock_per_thread.size() << std::endl;
         switch (a_type)
         {
         case THREAD_START:
             if (creator_id < 0)
-                clock_per_thread.emplace_back(DRDClockVector());
+            {
+                // std::cout << "clock per 1: " << clock_per_thread.size() << std::endl;
+                clock_per_thread.emplace_back(DRDClockVector(act));
+            }
             else
-                clock_per_thread.emplace_back(DRDClockVector(&clock_per_thread[creator_id], act));
+            {
+                // std::cerr << "clock per 2: " << clock_per_thread.size() << " creator id: " << creator_id << std::endl;
+                clock_per_thread.emplace_back(DRDClockVector(clock_per_thread[creator_id], act));
+            }
             break;
         case THREAD_CREATE:
-            creator_id = act->get_tid();
-            clock_per_thread[act->get_tid()].update(act->get_tid(), time);
+            // std::cout << "clock per 3: " << clock_per_thread.size() << std::endl;
+            creator_id = act.t_id;
+            clock_per_thread[act.t_id].update(act.t_id, time);
             break;
         case ATOMIC_READ:
             break;
@@ -83,25 +97,38 @@ void DRD_Testor::test_data_race()
 /// @brief Print data race if exists
 void DRD_Testor::print_race()
 {
-    std::cout << "No race!" << std::endl;
+    std::cerr << "No race!" << std::endl;
+}
+
+DRDClockVector::DRDClockVector() : clock{}
+{
+    clock = std::vector<int>(1, 0);
+    if (static_cast<int>(clock.size()) < num_threads)
+        clock.push_back(0);
+}
+
+DRDClockVector::DRDClockVector(const DRDAction &act) : clock{}
+{
+    num_threads = act.t_id + 1;
+    clock = std::vector<int>(num_threads, 0);
+    if (static_cast<int>(clock.size()) < num_threads)
+        clock.push_back(0);
+    clock[act.t_id] = act.seq_number;
 }
 
 /// @brief Create a new clock vector for current thread
 /// @param parent Parent clock to create from
 /// @param act Current thread action
-DRDClockVector::DRDClockVector(DRDClockVector *parent, const ModelAction *act)
+DRDClockVector::DRDClockVector(const DRDClockVector &parent, const DRDAction &act) : clock{}
 {
-    num_threads = act != NULL ? act->get_tid() + 1 : 0;
-    if (parent && parent->num_threads > num_threads)
-        num_threads = parent->num_threads;
-    if (parent)
-        clock = std::vector<int>(parent->clock);
-    else
-        clock = std::vector<int>(num_threads, 0);
-    if (clock.size() < num_threads)
+    num_threads = act.t_id + 1;
+    if (parent.num_threads > num_threads)
+        num_threads = parent.num_threads;
+    std::cerr << "parent->clock.size(): " << parent.clock.size() << std::endl;
+    clock = std::vector<int>(parent.clock);
+    if (static_cast<int>(clock.size()) < num_threads)
         clock.push_back(0);
-    if (act != NULL)
-        clock[act->get_tid()] = act->get_seq_number();
+    clock[act.t_id] = act.seq_number;
 }
 /**
  * Merge a clock vector into this vector, using a pairwise comparison. The

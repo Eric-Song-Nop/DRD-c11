@@ -13,6 +13,7 @@
 #include "mutex.h"
 #include <condition_variable>
 #include "classlist.h"
+#include "action.h"
 
 #include <unordered_map>
 
@@ -20,10 +21,23 @@
 #define MAIN_THREAD_ID		1
 #include <vector>
 
+class DRDAction{
+public:
+    unsigned int seq_number = 0;
+    unsigned int t_id = 0;
+    action_type a_type;
+    memory_order order;
+    uint64_t loc;
+
+    DRDAction(const ModelAction* action);
+};
+
 class DRDClockVector
 {
 public:
-    DRDClockVector(DRDClockVector *parent = nullptr, const ModelAction *act = nullptr);
+    DRDClockVector();
+    DRDClockVector(const DRDAction &act);
+    DRDClockVector(const DRDClockVector &parent, const DRDAction &act);
     bool merge(const DRDClockVector *cv);
     void update(int tid, int time);
     
@@ -53,7 +67,7 @@ struct LockState
 class DRD_Testor
 {
 private:
-    std::vector<ModelAction*> action_trace;
+    std::vector<DRDAction> action_trace;
     std::vector<DRDClockVector> clock_per_thread; // each one is for each thread
     std::unordered_map<void*, ThreadState> ts;
     std::unordered_map<void*, VarState> vs;
