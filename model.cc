@@ -19,7 +19,7 @@
 #include "params.h"
 #include "plugins.h"
 
-#include "drd_testor.h"
+#include "drdtestor.h"
 
 ModelChecker *model = NULL;
 int inside_model = 0;

@@ -24,6 +24,8 @@ class ConcretePredicate;
 class WaitObj;
 class actionlist;
 
+class DRD_Testor;
+
 #include "actionlist.h"
 
 struct model_snapshot_members;

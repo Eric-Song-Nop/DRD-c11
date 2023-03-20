@@ -1,5 +1,6 @@
-#include "drd_testor.h"
-DRD_Testor::DRD_Testor()
+#include "drdtestor.h"
+#include <iostream>
+DRD_Testor::DRD_Testor() : action_trace{}
 {
 }
 
@@ -11,7 +12,7 @@ DRD_Testor::DRD_Testor(actionlist* action_trace) : action_trace{}
 }
 
 /// @brief Main entry of fast track algorithm
-void test_data_race()
+void DRD_Testor::test_data_race()
 {
 
 }
@@ -19,4 +20,5 @@ void test_data_race()
 /// @brief Print data race if exists
 void DRD_Testor::print_race()
 {
+    std::cout << "No race!" << std::endl;
 }

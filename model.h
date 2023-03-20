@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <inttypes.h>
 
+#include "drdtestor.h"
+
 #include "mymemory.h"
 #include "hashtable.h"
 #include "config.h"
