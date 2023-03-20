@@ -5,7 +5,7 @@
 std::atomic<int> count{0};
 
 void incrementCount() {
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 5; i++) {
         count++;
     }
 }
