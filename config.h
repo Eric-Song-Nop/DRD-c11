@@ -66,7 +66,7 @@
 //#define COLLECT_STAT
 #define REPORT_DATA_RACES
 
-// #define PRINT_TRACE
+#define PRINT_TRACE
 
 #define DRD_TESTOR
 

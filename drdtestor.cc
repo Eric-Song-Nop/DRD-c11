@@ -59,35 +59,58 @@ void DRD_Testor::test_data_race()
     int time = 0; // The global time
     for (int i = 0; i < MAIN_THREAD_ID; i++)
     {
-        clock_per_thread.emplace_back(DRDClockVector());
+        ThreadState ts;
+        ts.clock = DRDClockVector();
+        ts.tid = i;
+        ts.epoch = time;
+        clock_per_thread.emplace_back(ts);
     }
     int creator_id = MAIN_THREAD_ID - 1;
     for (const auto &act : action_trace)
     {
         time = act.seq_number;
         auto a_type = act.a_type;
-        std::cerr << "seq: " << act.seq_number << " clock per size: " << clock_per_thread.size() << std::endl;
+        // std::cerr << "seq: " << act.seq_number << " clock per size: " << clock_per_thread.size() << std::endl;
         switch (a_type)
         {
         case THREAD_START:
+        {
             if (creator_id < 0)
             {
                 // std::cout << "clock per 1: " << clock_per_thread.size() << std::endl;
-                clock_per_thread.emplace_back(DRDClockVector(act));
+                ThreadState ts;
+                ts.clock = DRDClockVector(act);
+                ts.tid = act.t_id;
+                ts.epoch = time;
+                clock_per_thread.emplace_back(ts);
             }
             else
             {
                 // std::cerr << "clock per 2: " << clock_per_thread.size() << " creator id: " << creator_id << std::endl;
-                clock_per_thread.emplace_back(DRDClockVector(clock_per_thread[creator_id], act));
+                ThreadState ts;
+                ts.clock = DRDClockVector(clock_per_thread[creator_id].clock, act);
+                ts.tid = act.t_id;
+                ts.epoch = time;
+                clock_per_thread.push_back(ts);
             }
             break;
+        }
         case THREAD_CREATE:
+        {
             // std::cout << "clock per 3: " << clock_per_thread.size() << std::endl;
             creator_id = act.t_id;
-            clock_per_thread[act.t_id].update(act.t_id, time);
+            clock_per_thread[act.t_id].clock.update(act.t_id, time);
+            clock_per_thread[act.t_id].epoch = time;
             break;
+        }
         case ATOMIC_READ:
+        {
+            auto loc = act.loc;
+            auto t_id = act.t_id;
+            if(vs.find(loc) != vs.end() && ts.find(t_id) != ts.end() && vs[loc].r_epoch == ts[t_id].epoch)
+                break;
             break;
+        }
         default:
             break;
         }

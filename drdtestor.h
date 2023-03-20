@@ -68,9 +68,9 @@ class DRD_Testor
 {
 private:
     std::vector<DRDAction> action_trace;
-    std::vector<DRDClockVector> clock_per_thread; // each one is for each thread
-    std::unordered_map<void*, ThreadState> ts;
-    std::unordered_map<void*, VarState> vs;
+    std::vector<ThreadState> clock_per_thread; // each one is for each thread
+    std::unordered_map<int, ThreadState> ts;
+    std::unordered_map<uint64_t, VarState> vs;
     std::unordered_map<cdsc::mutex *, LockState> ls;
 
 public:
