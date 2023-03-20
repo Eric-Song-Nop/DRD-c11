@@ -19,6 +19,8 @@
 #include "params.h"
 #include "plugins.h"
 
+#include "drd_testor.h"
+
 ModelChecker *model = NULL;
 int inside_model = 0;
 
@@ -274,7 +276,7 @@ void ModelChecker::print_execution(bool printbugs) const
 	model_print("Program output from execution %d:\n",
 							get_execution_number());
 	print_program_output();
-
+	
 	if (params.verbose >= 3) {
 		print_stats();
 	}
@@ -288,6 +290,12 @@ void ModelChecker::print_execution(bool printbugs) const
 	model_print("\n");
 #ifdef PRINT_TRACE
 	execution->print_summary();
+#endif
+
+#ifdef DRD_TESTOR
+	DRD_Testor drd_testor(execution->get_action_trace());
+	drd_testor.test_data_race();
+	drd_testor.print_race();
 #endif
 }
 
